@@ -24,7 +24,8 @@ extern "C" {
 struct selabel_handle;
 
 int make_ext4fs(const char *filename, long long len,
-                const char *mountpoint, struct selabel_handle *sehnd);
+                const char *mountpoint, struct selabel_handle *sehnd,
+                const char *uuid, int preserve_ownership);
 int make_ext4fs_sparse_fd(int fd, long long len,
                 const char *mountpoint, struct selabel_handle *sehnd);
 
