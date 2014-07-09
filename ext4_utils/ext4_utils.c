@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #ifdef USE_MINGW
 #include <winsock2.h>
@@ -140,7 +141,7 @@ void ext4_free_fs_aux_info()
 }
 
 /* Fill in the superblock memory buffer based on the filesystem parameters */
-void ext4_fill_in_sb()
+void ext4_fill_in_sb(const char *uuid)
 {
 	unsigned int i;
 	struct ext4_super_block *sb = aux_info.sb;
@@ -177,7 +178,13 @@ void ext4_fill_in_sb()
 	sb->s_feature_compat = info.feat_compat;
 	sb->s_feature_incompat = info.feat_incompat;
 	sb->s_feature_ro_compat = info.feat_ro_compat;
-	generate_uuid("extandroid/make_ext4fs", info.label, sb->s_uuid);
+	if (!uuid) {
+		generate_uuid("extandroid/make_ext4fs", info.label,
+			sb->s_uuid);
+	} else {
+		if (uuid_parse(uuid, sb->s_uuid) < 0)
+			error("UUID is invalid -- %s", uuid);
+	}
 	memset(sb->s_volume_name, 0, sizeof(sb->s_volume_name));
 	strncpy(sb->s_volume_name, info.label, sizeof(sb->s_volume_name));
 	memset(sb->s_last_mounted, 0, sizeof(sb->s_last_mounted));

@@ -134,7 +134,7 @@ int ext4_bg_has_super_block(int bg);
 void write_ext4_image(int fd, int gz, int sparse, int crc);
 void ext4_create_fs_aux_info(void);
 void ext4_free_fs_aux_info(void);
-void ext4_fill_in_sb(void);
+void ext4_fill_in_sb(const char *uuid);
 void ext4_create_resize_inode(void);
 void ext4_create_journal_inode(void);
 void ext4_update_free(void);
@@ -155,7 +155,7 @@ int make_ext4fs_internal(int fd, const char *directory,
                          const char *mountpoint, fs_config_func_t fs_config_func, int gzip,
                          int sparse, int crc, int wipe,
                          struct selabel_handle *sehnd, int verbose,
-                         int preserve_ownership);
+                         const char *uuid, int preserve_ownership);
 
 #ifdef __cplusplus
 }

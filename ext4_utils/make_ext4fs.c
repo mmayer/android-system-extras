@@ -410,11 +410,12 @@ int make_ext4fs_sparse_fd(int fd, long long len,
 	reset_ext4fs_info();
 	info.len = len;
 
-	return make_ext4fs_internal(fd, NULL, mountpoint, NULL, 0, 1, 0, 0, sehnd, 0, 0);
+	return make_ext4fs_internal(fd, NULL, mountpoint, NULL, 0, 1, 0, 0, sehnd, 0, NULL, 0);
 }
 
 int make_ext4fs(const char *filename, long long len,
-                const char *mountpoint, struct selabel_handle *sehnd)
+                const char *mountpoint, struct selabel_handle *sehnd,
+                const char *uuid, int preserve_ownership)
 {
 	int fd;
 	int status;
@@ -428,7 +429,7 @@ int make_ext4fs(const char *filename, long long len,
 		return EXIT_FAILURE;
 	}
 
-	status = make_ext4fs_internal(fd, NULL, mountpoint, NULL, 0, 0, 0, 1, sehnd, 0, 0);
+	status = make_ext4fs_internal(fd, NULL, mountpoint, NULL, 0, 0, 0, 1, sehnd, 0, uuid, 0);
 	close(fd);
 
 	return status;
@@ -497,7 +498,7 @@ static char *canonicalize_rel_slashes(const char *str)
 int make_ext4fs_internal(int fd, const char *_directory,
                          const char *_mountpoint, fs_config_func_t fs_config_func, int gzip,
                          int sparse, int crc, int wipe,
-                         struct selabel_handle *sehnd, int verbose,
+                         struct selabel_handle *sehnd, int verbose, const char *uuid,
                          int preserve_ownership)
 {
 	u32 root_inode_num;
@@ -589,7 +590,7 @@ int make_ext4fs_internal(int fd, const char *_directory,
 
 	block_allocator_init();
 
-	ext4_fill_in_sb();
+	ext4_fill_in_sb(uuid);
 
 	if (reserve_inodes(0, 10) == EXT4_ALLOCATE_FAILED)
 		error("failed to reserve first 10 inodes");
