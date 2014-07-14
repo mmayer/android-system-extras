@@ -19,6 +19,9 @@
 
 #include "ext4_utils.h"
 
+typedef unsigned char uuid_t[16];
+
 void generate_uuid(const char *namespace, const char *name, u8 result[16]);
+int uuid_parse(const char *in, uuid_t uu);
 
 #endif
