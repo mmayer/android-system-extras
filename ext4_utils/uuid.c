@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <ctype.h>
 #include <string.h>
 
 #ifdef USE_MINGW
@@ -62,4 +63,78 @@ void generate_uuid(const char *namespace, const char *name, u8 result[16])
 	uuid->time_hi_and_version |= (5 << 12);
 	uuid->clk_seq_hi_res &= ~(1 << 6);
 	uuid->clk_seq_hi_res |= 1 << 7;
+}
+
+static void uuid_pack(const struct uuid *uu, uuid_t ptr)
+{
+	uint32_t	tmp;
+	unsigned char	*out = ptr;
+
+	tmp = uu->time_low;
+	out[3] = (unsigned char) tmp;
+	tmp >>= 8;
+	out[2] = (unsigned char) tmp;
+	tmp >>= 8;
+	out[1] = (unsigned char) tmp;
+	tmp >>= 8;
+	out[0] = (unsigned char) tmp;
+
+	tmp = uu->time_mid;
+	out[5] = (unsigned char) tmp;
+	tmp >>= 8;
+	out[4] = (unsigned char) tmp;
+
+	tmp = uu->time_hi_and_version;
+	out[7] = (unsigned char) tmp;
+	tmp >>= 8;
+	out[6] = (unsigned char) tmp;
+
+	out[9] = (unsigned char) uu->clk_seq_low;
+	out[8] = (unsigned char) uu->clk_seq_hi_res;
+
+	memcpy(out+10, &uu->node0_1, 6);
+}
+
+int uuid_parse(const char *in, uuid_t uu)
+{
+	struct uuid	uuid;
+	int 		i;
+	const char	*cp;
+	char		buf[3];
+	u16		clock_seq;
+	u8	 	*node;
+
+	if (strlen(in) != 36)
+		return -1;
+	for (i=0, cp = in; i <= 36; i++,cp++) {
+		if ((i == 8) || (i == 13) || (i == 18) ||
+		    (i == 23)) {
+			if (*cp == '-')
+				continue;
+			else
+				return -1;
+		}
+		if (i== 36)
+			if (*cp == 0)
+				continue;
+		if (!isxdigit(*cp))
+			return -1;
+	}
+	uuid.time_low = strtoul(in, NULL, 16);
+	uuid.time_mid = strtoul(in+9, NULL, 16);
+	uuid.time_hi_and_version = strtoul(in+14, NULL, 16);
+	clock_seq = strtoul(in+19, NULL, 16);
+	uuid.clk_seq_low = (u8) clock_seq & 0xff;
+	uuid.clk_seq_hi_res = (u8) (clock_seq >> 8) & 0xff;
+	cp = in+24;
+	buf[2] = 0;
+	node = (u8 *)&uuid.node0_1;
+	for (i=0; i < 6; i++) {
+		buf[0] = *cp++;
+		buf[1] = *cp++;
+		node[i] = strtoul(buf, NULL, 16);
+	}
+
+	uuid_pack(&uuid, uu);
+	return 0;
 }
